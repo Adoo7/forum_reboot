@@ -3,13 +3,44 @@
   <link rel="stylesheet" type="text/css" href="/pages/style/styles.css">
 </head>
 
-<body onload="getArtists()">
-  <h1 class="header">
-    <span class="emph-text">
-      FORUM UNDER DEVELOPMENT
-    </span>
-  </h1>
-
+<body onload="">
+  <header>
+    <h1>Forum</h1>
+    <a href="#" class="login-btn">Login</a>
+  </header>
+  <div class="container">
+    <div class="filter">
+      <label for="category-filter">Filter by Category:</label>
+      <select id="category-filter">
+        <option value="all">All Categories</option>
+        <option value="tech">Tech</option>
+        <option value="sports">Sports</option>
+        <option value="music">Music</option>
+      </select>
+    </div>
+    <div class="post">
+      <div class="post-header">
+        <span class="category">Tech</span>
+        Title
+      </div>
+      <p>Post content goes here...</p>
+      <div class="post-actions">
+        <span class="like">❤️ 100</span>
+        <span class="comment">💬 Comments</span>
+      </div>
+    </div>
+    <div class="post">
+      <div class="post-header">
+        <span class="category">Sports</span>
+        Title
+      </div>
+      <p>Post content goes here...</p>
+      <div class="post-actions">
+        <span class="like">❤️ 50</span>
+        <span class="comment">💬 Comments</span>
+      </div>
+    </div>
+  </div>
 </body>
 <script>
 </script>

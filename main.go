@@ -17,5 +17,7 @@ func main() {
 	// example of how to make a function return a response
 	// http.HandleFunc("/get-artists", handlers.GetArtists)
 	// http.HandleFunc("/get-relations", handlers.GetRelations)
+
+	
 	log.Fatal(http.ListenAndServe(":2345", nil))
 }
