@@ -143,6 +143,11 @@ ON DELETE NO ACTION
 ON UPDATE NO ACTION;
 
 
+
+
+SELECT * FROM Category;
+
+
 INSERT INTO Category (Category_ID, Name, Description)
 VALUES 
 (1, 'General Discussion', 'A place for general topics and conversations'),
