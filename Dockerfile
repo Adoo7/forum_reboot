@@ -25,4 +25,4 @@ RUN CGO_ENABLED=1 GOOS=linux go build
 EXPOSE 2345
 
 # Run
-CMD ["./forum"]
+CMD ["./forum_reboot"]
