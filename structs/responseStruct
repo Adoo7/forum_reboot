@@ -2,19 +2,21 @@ package structs
 
 // MARK: Category
 type CategoryResponse struct {
-	CategoryID   int    `json:"category_id"`
-	Name         string `json:"name"`
-	Description  string `json:"description"`
+    CategoryID   int    `json:"category_id"`
+    Name         string `json:"name"`
+    Description  string `json:"description"`
 }
+
 
 // MARK: User
 type UserResponse struct {
     UserID    int    `json:"user_id"`
     Username  string `json:"username"`
     Email     string `json:"email"`
-    Password  string `json:"password"` 
-    CreatedAt string `json:"created_at"` 
+    Password  string `json:"password"`
+    CreatedAt string `json:"created_at"`
 }
+
 
 
 // MARK: UserRole
@@ -39,15 +41,16 @@ type UserSession struct {
 
 // MARK: Post
 type PostResponse struct {
-	PostID        int       `json:"post_id"`
-	UserID        int       `json:"user_id"`
-	Title         string    `json:"title"`
-	Message       string    `json:"message"`
-	TimeofPost    string    `json:"time_of_post"` // Use a suitable time format for JSON
-	LikeCount     int       `json:"like_count"`
-	DislikeCount  int       `json:"dislike_count"`
-	Categories    []Category `json:"categories"`
+    PostID        int       `json:"post_id"`
+    UserID        int       `json:"user_id"`
+    Title         string    `json:"title"`
+    Message       string    `json:"message"`
+    TimeofPost    string    `json:"time_of_post"`
+    LikeCount     int       `json:"like_count"`
+    DislikeCount  int       `json:"dislike_count"`
+    Categories    []Category `json:"categories"`
 }
+
 
 // MARK: PostCategory
 type PostCategory struct {
@@ -58,21 +61,22 @@ type PostCategory struct {
 
 // MARK: Comment
 type CommentResponse struct {
-	CommentID      int    `json:"comment_id"`
-	UserID         int    `json:"user_id"`
-	PostID         int    `json:"post_id"`
-	TimeofComment  string `json:"time_of_comment"` // Use a suitable time format for JSON
-	Message        string `json:"message"`
-	LikeCount      int    `json:"like_count"`
-	DislikeCount   int    `json:"dislike_count"`
+    CommentID      int    `json:"comment_id"`
+    UserID         int    `json:"user_id"`
+    PostID         int    `json:"post_id"`
+    TimeofComment  string `json:"time_of_comment"`
+    Message        string `json:"message"`
+    LikeCount      int    `json:"like_count"`
+    DislikeCount   int    `json:"dislike_count"`
 }
+
 
 // MARK: Reaction
 type ReactionResponse struct {
-	ReactionID    int    `json:"reaction_id"`
-	UserID        int    `json:"user_id"`
-	PostID        *int   `json:"post_id"` // Pointer to handle possible NULL values
-	CommentID     *int   `json:"comment_id"` // Pointer to handle possible NULL values
-	Type          string `json:"type"`
-	TimeofReaction string `json:"time_of_reaction"` // Use a suitable time format for JSON
+    ReactionID    int    `json:"reaction_id"`
+    UserID        int    `json:"user_id"`
+    PostID        *int   `json:"post_id"`
+    CommentID     *int   `json:"comment_id"`
+    Type          string `json:"type"`
+    TimeofReaction string `json:"time_of_reaction"`
 }
