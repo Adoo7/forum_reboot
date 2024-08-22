@@ -4,9 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"forum_reboot/structs"
 	"os"
-	"structs"
-	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -146,28 +145,3 @@ func GetReaction(id int) (structs.ReactionResponse, error) {
 	}
 	return reaction, nil
 }
-
-// Convert from UserSessionDB to UserSessionAPI
-func dbUserSessionToApiUserSession(dbSession structs.UserSessionDB) structs.UserSessionAPI {
-	return structs.UserSessionAPI{
-		UserSessionID: dbSession.Id,
-		UserID:        dbSession.UserId,
-		Token:         dbSession.Token,
-		CreationTime:  dbSession.CreationTime.Format(time.RFC3339),
-		ExpireTime:    dbSession.ExpireTime.Format(time.RFC3339),
-	}
-}
-
-// Convert from UserSessionAPI to UserSessionDB
-func apiUserSessionToDbUserSession(apiSession structs.UserSessionAPI) structs.UserSessionDB {
-	creationTime, _ := time.Parse(time.RFC3339, apiSession.CreationTime)
-	expireTime, _ := time.Parse(time.RFC3339, apiSession.ExpireTime)
-	return structs.UserSessionDB{
-		Id:           apiSession.UserSessionID,
-		UserId:       apiSession.UserID,
-		Token:        apiSession.Token,
-		CreationTime: creationTime,
-		ExpireTime:   expireTime,
-	}
-}
-
