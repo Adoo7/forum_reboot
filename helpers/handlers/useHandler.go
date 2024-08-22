@@ -36,7 +36,7 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // MakeHandler wraps a handler function
-func MakeHandler(fn func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
+func UseHandler(fn func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fn(w, r)
 	}

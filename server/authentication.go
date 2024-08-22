@@ -3,20 +3,20 @@ package server
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
+	"log"
 	"net/http"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3" /
+_ "github.com/mattn/go-sqlite3" 
 	"golang.org/x/crypto/bcrypt"
 	"github.com/google/uuid"
 )
 
-var db *sql.DB
+var DB *sql.DB
 
 func init() {
 	var err error
-	db, err = sql.Open("sqlite3", "./forum.db")
+	DB, err = sql.Open("sqlite3", "./forum.db")
 	if err != nil {
 		panic(err)
 	}
@@ -36,7 +36,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	// Check if email is already taken
 	var exists bool
-	err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM User WHERE email = ?)", user.Email).Scan(&exists)
+	err := DB.QueryRow("SELECT EXISTS(SELECT 1 FROM User WHERE email = ?)", user.Email).Scan(&exists)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
@@ -54,7 +54,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Insert user into the database
-	_, err = db.Exec("INSERT INTO User (username, email, passwords) VALUES (?, ?, ?)", user.Username, user.Email, string(hashedPassword))
+	_, err = DB.Exec("INSERT INTO User (username, email, passwords) VALUES (?, ?, ?)", user.Username, user.Email, string(hashedPassword))
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
@@ -76,7 +76,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 
 	// Retrieve hashed password from the database
 	var hashedPassword string
-	err := db.QueryRow("SELECT passwords FROM User WHERE email = ?", credentials.Email).Scan(&hashedPassword)
+	err := DB.QueryRow("SELECT passwords FROM User WHERE email = ?", credentials.Email).Scan(&hashedPassword)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
@@ -96,7 +96,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	// Create session
 	sessionID := uuid.New().String()
 	expireTime := time.Now().Add(1 * time.Hour) // Session expires in 1 hour
-	_, err = db.Exec("INSERT INTO UserSession (UserSessionID, User_ID, Token, ExpireTime) SELECT ?, User_ID, ?, ? FROM User WHERE email = ?", sessionID, sessionID, expireTime, credentials.Email)
+	_, err = DB.Exec("INSERT INTO UserSession (UserSessionID, User_ID, Token, ExpireTime) SELECT ?, User_ID, ?, ? FROM User WHERE email = ?", sessionID, sessionID, expireTime, credentials.Email)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
@@ -120,7 +120,7 @@ func CheckSession(r *http.Request) (int, bool) {
 	}
 
 	var userID int
-	err = db.QueryRow("SELECT User_ID FROM UserSession WHERE Token = ? AND ExpireTime > ?", cookie.Value, time.Now()).Scan(&userID)
+	err = DB.QueryRow("SELECT User_ID FROM UserSession WHERE Token = ? AND ExpireTime > ?", cookie.Value, time.Now()).Scan(&userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return 0, false
@@ -139,7 +139,7 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Delete session from the database
-	_, err = db.Exec("DELETE FROM UserSession WHERE Token = ?", cookie.Value)
+	_, err = DB.Exec("DELETE FROM UserSession WHERE Token = ?", cookie.Value)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
@@ -154,5 +154,19 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 	})
 
 	w.WriteHeader(http.StatusOK)
+}
+
+// server/authentication.go
+func init() {
+    var err error
+    DB, err = sql.Open("sqlite3", "./forum.sqlite")
+    if err != nil {
+        log.Fatalf("Failed to open database: %v", err)
+    }
+    err = DB.Ping()
+    if err != nil {
+        log.Fatalf("Failed to connect to database: %v", err)
+    }
+    log.Println("Database connected successfully")
 }
 

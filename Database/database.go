@@ -1,15 +1,17 @@
 package database
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"os"
 	"structs"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var db *sql.DB
+var DB *sql.DB
 
 // Connect connects to the database file specified by dbPath
 func Connect(dbPath string) error {
@@ -23,19 +25,19 @@ func Connect(dbPath string) error {
 	if err != nil {
 		return fmt.Errorf("can't connect to database: %w", err)
 	}
-	db = ldb
+	DB = ldb
 	return nil
 }
 
 // Close closes the database connection
 func Close() error {
-	return db.Close()
+	return DB.Close()
 }
 
 // CheckExistance checks if a value exists in a specific table and column
 func CheckExistance(tablename, columnname, value string) (bool, error) {
 	query := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s = ?", tablename, columnname)
-	stmt, err := db.Prepare(query)
+	stmt, err := DB.Prepare(query)
 	if err != nil {
 		return false, err
 	}
@@ -53,7 +55,7 @@ func CheckExistance(tablename, columnname, value string) (bool, error) {
 // InsertCategory inserts a new category into the Category table
 func InsertCategory(category structs.CategoryResponse) error {
 	query := `INSERT INTO Category (Name, Description) VALUES (?, ?)`
-	_, err := db.Exec(query, category.Name, category.Description)
+	_, err := DB.Exec(query, category.Name, category.Description)
 	return err
 }
 
@@ -61,7 +63,7 @@ func InsertCategory(category structs.CategoryResponse) error {
 func GetCategory(id int) (structs.CategoryResponse, error) {
 	var category structs.CategoryResponse
 	query := `SELECT Name, Description FROM Category WHERE Category_ID = ?`
-	row := db.QueryRow(query, id)
+	row := DB.QueryRow(query, id)
 	err := row.Scan(&category.Name, &category.Description)
 	if err != nil {
 		return category, err
@@ -72,7 +74,7 @@ func GetCategory(id int) (structs.CategoryResponse, error) {
 // InsertUser inserts a new user into the User table
 func InsertUser(user structs.UserResponse, hashedPassword string) error {
 	query := `INSERT INTO User (username, email, passwords) VALUES (?, ?, ?)`
-	_, err := db.Exec(query, user.Username, user.Email, hashedPassword)
+	_, err := DB.Exec(query, user.Username, user.Email, hashedPassword)
 	return err
 }
 
@@ -80,7 +82,7 @@ func InsertUser(user structs.UserResponse, hashedPassword string) error {
 func GetUser(username string) (structs.UserResponse, error) {
 	var user structs.UserResponse
 	query := `SELECT username, email, passwords FROM User WHERE username = ?`
-	row := db.QueryRow(query, username)
+	row := DB.QueryRow(query, username)
 	err := row.Scan(&user.Username, &user.Email, &user.Passwords)
 	if err != nil {
 		return user, err
@@ -91,7 +93,7 @@ func GetUser(username string) (structs.UserResponse, error) {
 // InsertPost inserts a new post into the Post table
 func InsertPost(post structs.PostResponse) error {
 	query := `INSERT INTO Post (User_ID, Title, Messages, Like_count, DisLike_Count) VALUES (?, ?, ?, ?, ?)`
-	_, err := db.Exec(query, post.User_ID, post.Title, post.Message, post.Like_count, post.DisLike_Count)
+	_, err := DB.Exec(query, post.User_ID, post.Title, post.Message, post.Like_count, post.DisLike_Count)
 	return err
 }
 
@@ -99,7 +101,7 @@ func InsertPost(post structs.PostResponse) error {
 func GetPost(id int) (structs.PostResponse, error) {
 	var post structs.PostResponse
 	query := `SELECT User_ID, Title, Messages, Like_count, DisLike_Count FROM Post WHERE PostID = ?`
-	row := db.QueryRow(query, id)
+	row := DB.QueryRow(query, id)
 	err := row.Scan(&post.User_ID, &post.Title, &post.Message, &post.Like_count, &post.DisLike_Count)
 	if err != nil {
 		return post, err
@@ -110,7 +112,7 @@ func GetPost(id int) (structs.PostResponse, error) {
 // InsertComment inserts a new comment into the Comment table
 func InsertComment(comment structs.CommentResponse) error {
 	query := `INSERT INTO Comment (User_ID, PostID, message, Like_Count, DisLike_Count) VALUES (?, ?, ?, ?, ?)`
-	_, err := db.Exec(query, comment.User_ID, comment.PostID, comment.Message, comment.Like_Count, comment.DisLike_Count)
+	_, err := DB.Exec(query, comment.User_ID, comment.PostID, comment.Message, comment.Like_Count, comment.DisLike_Count)
 	return err
 }
 
@@ -118,7 +120,7 @@ func InsertComment(comment structs.CommentResponse) error {
 func GetComment(id int) (structs.CommentResponse, error) {
 	var comment structs.CommentResponse
 	query := `SELECT User_ID, PostID, message, Like_Count, DisLike_Count FROM Comment WHERE Comment_ID = ?`
-	row := db.QueryRow(query, id)
+	row := DB.QueryRow(query, id)
 	err := row.Scan(&comment.User_ID, &comment.PostID, &comment.Message, &comment.Like_Count, &comment.DisLike_Count)
 	if err != nil {
 		return comment, err
@@ -129,7 +131,7 @@ func GetComment(id int) (structs.CommentResponse, error) {
 // InsertReaction inserts a new reaction into the Reaction table
 func InsertReaction(reaction structs.ReactionResponse) error {
 	query := `INSERT INTO Reaction (User_ID, PostID, Comment_ID, Type) VALUES (?, ?, ?, ?)`
-	_, err := db.Exec(query, reaction.User_ID, reaction.PostID, reaction.Comment_ID, reaction.Type)
+	_, err := DB.Exec(query, reaction.User_ID, reaction.PostID, reaction.Comment_ID, reaction.Type)
 	return err
 }
 
@@ -137,10 +139,35 @@ func InsertReaction(reaction structs.ReactionResponse) error {
 func GetReaction(id int) (structs.ReactionResponse, error) {
 	var reaction structs.ReactionResponse
 	query := `SELECT User_ID, PostID, Comment_ID, Type FROM Reaction WHERE ReactionID = ?`
-	row := db.QueryRow(query, id)
+	row := DB.QueryRow(query, id)
 	err := row.Scan(&reaction.User_ID, &reaction.PostID, &reaction.Comment_ID, &reaction.Type)
 	if err != nil {
 		return reaction, err
 	}
 	return reaction, nil
 }
+
+// Convert from UserSessionDB to UserSessionAPI
+func dbUserSessionToApiUserSession(dbSession structs.UserSessionDB) structs.UserSessionAPI {
+	return structs.UserSessionAPI{
+		UserSessionID: dbSession.Id,
+		UserID:        dbSession.UserId,
+		Token:         dbSession.Token,
+		CreationTime:  dbSession.CreationTime.Format(time.RFC3339),
+		ExpireTime:    dbSession.ExpireTime.Format(time.RFC3339),
+	}
+}
+
+// Convert from UserSessionAPI to UserSessionDB
+func apiUserSessionToDbUserSession(apiSession structs.UserSessionAPI) structs.UserSessionDB {
+	creationTime, _ := time.Parse(time.RFC3339, apiSession.CreationTime)
+	expireTime, _ := time.Parse(time.RFC3339, apiSession.ExpireTime)
+	return structs.UserSessionDB{
+		Id:           apiSession.UserSessionID,
+		UserId:       apiSession.UserID,
+		Token:        apiSession.Token,
+		CreationTime: creationTime,
+		ExpireTime:   expireTime,
+	}
+}
+
