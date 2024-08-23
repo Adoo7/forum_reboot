@@ -18,29 +18,67 @@
         <option value="music">Music</option>
       </select>
     </div>
-    <div class="post">
-      <div class="post-header">
-        <span class="category">Tech</span>
-        Title
-      </div>
-      <p>Post content goes here...</p>
-      <div class="post-actions">
-        <span class="like">❤️ 100</span>
-        <span class="comment">💬 Comments</span>
-      </div>
-    </div>
-    <div class="post">
-      <div class="post-header">
-        <span class="category">Sports</span>
-        Title
-      </div>
-      <p>Post content goes here...</p>
-      <div class="post-actions">
-        <span class="like">❤️ 50</span>
-        <span class="comment">💬 Comments</span>
-      </div>
+    <div id="posts">
+
     </div>
   </div>
 </body>
 <script>
+  getPosts();
+  async function getPosts() {
+    fetch("/get-posts").then((a) => a.json())
+      .then((b) => {
+        console.log(b)
+        b.forEach(p => {
+
+          var post = document.createElement("div");
+          var postHeader = document.createElement("div");
+          var postContent = document.createElement("p");
+          var postActions = document.createElement("div");
+          var postCategory = document.createElement("span");
+          var like = document.createElement("span");
+          var comment = document.createElement("span");
+
+          postContent.textContent += `${p.message}`;
+          postCategory.textContent += `${"Cat"}`;
+          like.textContent += `❤️ ${p.like_count}`;
+          comment.textContent += `💬 Comments`;
+
+          // <div class="post">
+          //   <div class="post-header">
+          //     <span class="category">Sports</span>
+          //     Title
+          //   </div>
+          //   <p>Post content goes here...</p>
+          //   <div class="post-actions">
+          //     <span class="like">❤️ 50</span>
+          //     <span class="comment">💬 Comments</span>
+          //   </div>
+          // </div> 
+
+          post.classList.add("post");
+          postHeader.classList.add("post-header");
+          postActions.classList.add("post-actions");
+          postCategory.classList.add("category");
+          like.classList.add("like");
+          comment.classList.add("comment");
+
+          post.appendChild(postHeader);
+          post.appendChild(postContent);
+          post.appendChild(postActions);
+
+          postHeader.appendChild(postCategory);
+          postHeader.append(`${p.title}`);
+
+          postActions.appendChild(like);
+          postActions.appendChild(comment);
+
+          document.getElementById("posts").appendChild(post);
+        });
+      })
+      .catch((e) => {
+        console.log(e)
+        document.getElementById("posts").append("error getting posts, please refresh!")
+      })
+  } 
 </script>

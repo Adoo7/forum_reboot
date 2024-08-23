@@ -17,6 +17,8 @@ func main() {
     http.HandleFunc("/register", server.RegisterUser)
     http.HandleFunc("/login", server.LoginUser)
     http.HandleFunc("/logout", server.LogoutUser)
+    // get posts
+    http.HandleFunc("/get-posts", server.GetPosts)
 
     // Redirect root to main page
     http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -56,6 +58,7 @@ func main() {
 
         w.Write([]byte("Test record message: " + message))
     })
+
 
     // Start the server
     fmt.Println("Server started on :2345")
