@@ -26,7 +26,8 @@
 <script>
   getPosts();
   async function getPosts() {
-    fetch("/get-posts").then((a) => a.json())
+    fetch("/get-posts")
+      .then((a) => a.json())
       .then((b) => {
         console.log(b)
         b.forEach(p => {
@@ -40,7 +41,11 @@
           var comment = document.createElement("span");
 
           postContent.textContent += `${p.message}`;
-          postCategory.textContent += `${"Cat"}`;
+
+          p.categories.forEach(cat => {
+            postCategory.textContent += `${cat.name} `;
+          });
+
           like.textContent += `❤️ ${p.like_count}`;
           comment.textContent += `💬 Comments`;
 
