@@ -19,7 +19,7 @@ CREATE TABLE User (
     User_ID INTEGER NOT NULL PRIMARY KEY,
     username VARCHAR NOT NULL,
     email VARCHAR NOT NULL,
-    passwords TEXT NOT NULL, --for storing hash password text is more flexible 
+    passwords TEXT NOT NULL, 
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
