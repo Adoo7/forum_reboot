@@ -89,6 +89,7 @@ CREATE TABLE Reaction (
 -- Insert data
 INSERT INTO Category (Category_ID, Name, Description)
 VALUES 
+(0, 'Test Category', 'A category made to test the database'),
 (1, 'General Discussion', 'A place for general topics and conversations'),
 (2, 'Programming', 'Discussions about programming languages and software development'),
 (3, 'Announcements', 'Official announcements and updates'),
@@ -123,6 +124,7 @@ VALUES
 (1, 1, 1),  -- Linking "Welcome to the Forum" to "General Discussion"
 (2, 2, 2),  -- Linking "Programming Tips" to "Programming"
 (3, 3, 3);  -- Linking "Forum Rules" to "Announcements"
+(4, 2, 1),  -- Linking "Welcome to the Forum" to "Programming"
 
 INSERT INTO Comment (Comment_ID, User_ID, PostID, message, Like_Count, DisLike_Count)
 VALUES 
