@@ -1,5 +1,6 @@
 package structs
 
+
 // MARK: Category
 type CategoryResponse struct {
     CategoryID   int    `json:"category_id"`

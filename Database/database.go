@@ -53,23 +53,32 @@ func CheckExistance(tablename, columnname, value string) (bool, error) {
 
 // InsertCategory inserts a new category into the Category table
 func InsertCategory(category structs.CategoryResponse) error {
-	query := `INSERT INTO Category (Category_ID, Name, Description) VALUES (?, ?, ?)`
+	query := `INSERT INTO Category (Category_ID, CategoryName, CategoryDescription) VALUES (?, ?, ?)`
 	_, err := DB.Exec(query, category.CategoryID, category.Name, category.Description)
 	return err
 }
 
-// GetCategory retrieves a category by its ID
-func GetCategory(id int) (structs.CategoryResponse, error) {
-	var category structs.CategoryResponse
-	query := `SELECT Name, Description FROM Category WHERE Category_ID = ?`
-	row := DB.QueryRow(query, id)
-	err := row.Scan(&category.Name, &category.Description)
-	if err != nil {
-		return category, err
-	}
-	category.CategoryID = id // Ensure ID is set correctly
-	return category, nil
+
+func GetAllCategories() ([]structs.CategoryResponse, error) {
+    rows, err := DB.Query("SELECT Category_ID, CategoryName, CategoryDescription FROM Category")
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var categories []structs.CategoryResponse
+    for rows.Next() {
+        var category structs.CategoryResponse
+        if err := rows.Scan(&category.CategoryID, &category.Name, &category.Description); err != nil {
+            return nil, err
+        }
+        categories = append(categories, category)
+    }
+
+    return categories, nil
 }
+
+
 
 // InsertUser inserts a new user into the User table
 func InsertUser(user structs.UserResponse, password string) error {
