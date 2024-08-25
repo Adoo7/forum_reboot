@@ -1,117 +1,132 @@
 package server
 
 import (
+
 	"database/sql"
-	"encoding/json"
+
+
+
 	"log"
 	"net/http"
 	"time"
 
-_ "github.com/mattn/go-sqlite3" 
-	"golang.org/x/crypto/bcrypt"
 	"github.com/google/uuid"
+	_ "github.com/mattn/go-sqlite3"
+
 )
 
 var DB *sql.DB
 
 func init() {
 	var err error
-	DB, err = sql.Open("sqlite3", "./forum.db")
+	DB, err = sql.Open("sqlite3", "./forum.sqlite")
 	if err != nil {
 		panic(err)
 	}
 }
-
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
-	var user struct {
-		Username string `json:"username"`
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
+	log.Println("RegisterUser called")
+	if r.Method == http.MethodPost {
+		// Parse the form data
+		err := r.ParseForm()
+		if err != nil {
+			http.Error(w, "Invalid request", http.StatusBadRequest)
+			return
+		}
 
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
-		return
-	}
+		// Retrieve form values
+		username := r.FormValue("username")
+		email := r.FormValue("email")
+		password := r.FormValue("password")
 
-	// Check if email is already taken
-	var exists bool
-	err := DB.QueryRow("SELECT EXISTS(SELECT 1 FROM User WHERE email = ?)", user.Email).Scan(&exists)
-	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-	if exists {
-		http.Error(w, "Email already taken", http.StatusConflict)
-		return
-	}
+		// Check if email is already taken
+		var exists bool
+		err = DB.QueryRow("SELECT EXISTS(SELECT 1 FROM User WHERE email = ?)", email).Scan(&exists)
+		if err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+		if exists {
+			http.Error(w, "Email already taken", http.StatusConflict)
+			return
+		}
 
-	// Hash the password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
+		// Insert user into the database
+		_, err = DB.Exec("INSERT INTO User (username, email, passwords) VALUES (?, ?, ?)", username, email, password)
+		if err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
 
-	// Insert user into the database
-	_, err = DB.Exec("INSERT INTO User (username, email, passwords) VALUES (?, ?, ?)", user.Username, user.Email, string(hashedPassword))
-	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
+		w.WriteHeader(http.StatusCreated)
+	} else {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 	}
-
-	w.WriteHeader(http.StatusCreated)
 }
 
+
+
 func LoginUser(w http.ResponseWriter, r *http.Request) {
-	var credentials struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
+	if r.Method == http.MethodPost {
+		// Parse the form data
+		err := r.ParseForm()
+		if err != nil {
+			http.Error(w, "Invalid request", http.StatusBadRequest)
+			return
+		}
 
-	if err := json.NewDecoder(r.Body).Decode(&credentials); err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
-		return
-	}
+		// Retrieve form values
+		email := r.FormValue("email")
+		password := r.FormValue("password")
 
-	// Retrieve hashed password from the database
-	var hashedPassword string
-	err := DB.QueryRow("SELECT passwords FROM User WHERE email = ?", credentials.Email).Scan(&hashedPassword)
-	if err != nil {
-		if err == sql.ErrNoRows {
+		// Log the input email and password for debugging
+		log.Printf("Email: %s, Password: %s", email, password)
+
+		// Retrieve stored password from the database
+		var storedPassword string
+		err = DB.QueryRow("SELECT passwords FROM User WHERE email = ?", email).Scan(&storedPassword)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+				return
+			}
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		// Log the stored password for debugging
+		log.Printf("Stored Password: %s", storedPassword)
+
+		// Check if the provided password matches the stored password
+		if password != storedPassword {
 			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 			return
 		}
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
+
+		// Create session
+		sessionID := uuid.New().String()
+		expireTime := time.Now().Add(1 * time.Hour) // Session expires in 1 hour
+		_, err = DB.Exec("INSERT INTO UserSession (UserSessionID, User_ID, Token, ExpireTime) SELECT ?, User_ID, ?, ? FROM User WHERE email = ?", sessionID, sessionID, expireTime, email)
+		if err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		// Set cookie
+		http.SetCookie(w, &http.Cookie{
+			Name:    "session_id",
+			Value:   sessionID,
+			Expires: expireTime,
+			Path:    "/",
+		})
+
+		w.WriteHeader(http.StatusOK)
+	} else {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 	}
-
-	// Compare provided password with stored hashed password
-	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(credentials.Password))
-	if err != nil {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
-		return
-	}
-
-	// Create session
-	sessionID := uuid.New().String()
-	expireTime := time.Now().Add(1 * time.Hour) // Session expires in 1 hour
-	_, err = DB.Exec("INSERT INTO UserSession (UserSessionID, User_ID, Token, ExpireTime) SELECT ?, User_ID, ?, ? FROM User WHERE email = ?", sessionID, sessionID, expireTime, credentials.Email)
-	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	// Set cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:    "session_id",
-		Value:   sessionID,
-		Expires: expireTime,
-		Path:    "/",
-	})
-
-	w.WriteHeader(http.StatusOK)
 }
+
+
 
 func CheckSession(r *http.Request) (int, bool) {
 	cookie, err := r.Cookie("session_id")
@@ -158,15 +173,14 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 
 // server/authentication.go
 func init() {
-    var err error
-    DB, err = sql.Open("sqlite3", "./forum.sqlite")
-    if err != nil {
-        log.Fatalf("Failed to open database: %v", err)
-    }
-    err = DB.Ping()
-    if err != nil {
-        log.Fatalf("Failed to connect to database: %v", err)
-    }
-    log.Println("Database connected successfully")
+	var err error
+	DB, err = sql.Open("sqlite3", "./forum.sqlite")
+	if err != nil {
+		log.Fatalf("Failed to open database: %v", err)
+	}
+	err = DB.Ping()
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	log.Println("Database connected successfully")
 }
-

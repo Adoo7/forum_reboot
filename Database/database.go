@@ -72,9 +72,9 @@ func GetCategory(id int) (structs.CategoryResponse, error) {
 }
 
 // InsertUser inserts a new user into the User table
-func InsertUser(user structs.UserResponse, hashedPassword string) error {
+func InsertUser(user structs.UserResponse, password string) error {
 	query := `INSERT INTO User (User_ID, username, email, passwords) VALUES (?, ?, ?, ?)`
-	_, err := DB.Exec(query, user.UserID, user.Username, user.Email, hashedPassword)
+	_, err := DB.Exec(query, user.UserID, user.Username, user.Email, password)
 	return err
 }
 
@@ -89,6 +89,7 @@ func GetUser(username string) (structs.UserResponse, error) {
 	}
 	return user, nil
 }
+
 
 // InsertPost inserts a new post into the Post table
 func InsertPost(post structs.PostResponse) error {
