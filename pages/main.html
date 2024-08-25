@@ -9,13 +9,11 @@
     <a href="/pages/login.html" class="login-btn">Login</a>
   </header>
   <div class="container">
-    <div class="filter">
-      <label for="category-filter">Filter by Category:</label>
-      <select id="category-filter">
-        <option value="all">All Categories</option>
-        <option value="tech">Tech</option>
-        <option value="sports">Sports</option>
-        <option value="music">Music</option>
+
+    <div class="form-group">
+      <label for="categories">Categories:</label>
+      <select id="categories" name="categories" multiple required>
+        <!-- Categories will be dynamically populated here -->
       </select>
     </div>
     <div class="post">
@@ -43,4 +41,29 @@
   </div>
 </body>
 <script>
+async function loadCategories() {
+  try {
+    const response = await fetch('/categories'); // Corrected URL
+    if (response.ok) {
+      const categories = await response.json();
+      const categorySelect = document.getElementById('categories');
+
+      categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category.category_id;
+        option.textContent = category.name;
+        categorySelect.appendChild(option);
+      });
+    } else {
+      console.error('Failed to load categories');
+      alert('Failed to load categories. Please refresh the page.');
+    }
+  } catch (error) {
+    console.error('Error loading categories:', error);
+    alert('Failed to load categories. Please try again later.');
+  }
+}
+
+window.onload = loadCategories; // Make sure this is called when the page loads
+
 </script>

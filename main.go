@@ -17,6 +17,7 @@ func main() {
     http.HandleFunc("/register", server.RegisterUser)
     http.HandleFunc("/login", server.LoginUser)
     http.HandleFunc("/logout", server.LogoutUser)
+    http.HandleFunc("/categories", server.GetCategories) 
 
     // Redirect root to main page
     http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
