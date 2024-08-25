@@ -27,7 +27,6 @@
 </body>
 
 <script>
-<<<<<<< Updated upstream
   getPosts();
 
   async function getPosts() {
@@ -82,9 +81,8 @@
         console.log(error);
         document.getElementById("posts").append("Error getting posts, please refresh!");
       });
-  }
-</script>
-=======
+  } 
+  
 async function loadCategories() {
   try {
     const response = await fetch('/categories'); // Corrected URL
@@ -111,4 +109,3 @@ async function loadCategories() {
 window.onload = loadCategories; // Make sure this is called when the page loads
 
 </script>
->>>>>>> Stashed changes

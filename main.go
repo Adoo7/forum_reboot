@@ -13,7 +13,6 @@ func main() {
 	// Serve static HTML files
 	http.Handle("/pages/", http.StripPrefix("/pages/", http.FileServer(http.Dir("pages/"))))
 
-<<<<<<< Updated upstream
 	// Handle routes
 	http.HandleFunc("/register", server.RegisterUser)
 	http.HandleFunc("/login", server.LoginUser)
@@ -22,13 +21,7 @@ func main() {
 	http.HandleFunc("/get-posts", server.GetPosts)
 	http.HandleFunc("/create-post", server.CreatePost)
 	http.HandleFunc("/get-categories", server.GetCategories)
-=======
-    // Handle routes
-    http.HandleFunc("/register", server.RegisterUser)
-    http.HandleFunc("/login", server.LoginUser)
-    http.HandleFunc("/logout", server.LogoutUser)
     http.HandleFunc("/categories", server.GetCategories) 
->>>>>>> Stashed changes
 
 	// Redirect root to main page
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
