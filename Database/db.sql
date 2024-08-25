@@ -89,6 +89,7 @@ CREATE TABLE Reaction (
 -- Insert data
 INSERT INTO Category (Category_ID, Name, Description)
 VALUES 
+(0, 'Test Category', 'A category made to test the database'),
 (1, 'General Discussion', 'A place for general topics and conversations'),
 (2, 'Programming', 'Discussions about programming languages and software development'),
 (3, 'Announcements', 'Official announcements and updates'),
