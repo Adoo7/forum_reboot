@@ -21,6 +21,20 @@ header {
   padding: 10px 0;
 }
 
+.post-link {
+  text-decoration: none;
+  /* Removes the underline */
+  color: inherit;
+  /* Inherits the color of the parent element */
+}
+
+.post-link:hover {
+  cursor: pointer;
+  /* Changes the cursor to a pointer on hover */
+  color: inherit;
+  /* Keeps the text color the same on hover */
+}
+
 .login-btn {
   position: absolute;
   top: 10px;

@@ -123,6 +123,7 @@ VALUES
 (1, 1, 1),  -- Linking "Welcome to the Forum" to "General Discussion"
 (2, 2, 2),  -- Linking "Programming Tips" to "Programming"
 (3, 3, 3);  -- Linking "Forum Rules" to "Announcements"
+(4, 2, 1),  -- Linking "Welcome to the Forum" to "Programming"
 
 INSERT INTO Comment (Comment_ID, User_ID, PostID, message, Like_Count, DisLike_Count)
 VALUES 

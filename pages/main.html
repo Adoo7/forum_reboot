@@ -3,11 +3,15 @@
   <link rel="stylesheet" type="text/css" href="/pages/style/styles.css">
 </head>
 
-<body onload="">
+<body>
   <header>
     <h1>Forum</h1>
-    <a href="/pages/login.html" class="login-btn">Login</a>
+    <nav>
+      <a href="/pages/login.html" class="login-btn">Login</a>
+      <a href="/pages/add-post.html" class="add-post-btn">➕</a>
+    </nav>
   </header>
+
   <div class="container">
     <div class="filter">
       <label for="category-filter">Filter by Category:</label>
@@ -19,19 +23,21 @@
       </select>
     </div>
     <div id="posts">
-
+      <!-- Posts will be dynamically generated here -->
     </div>
   </div>
 </body>
+
 <script>
   getPosts();
+
   async function getPosts() {
     fetch("/get-posts")
-      .then((a) => a.json())
-      .then((b) => {
-        console.log(b)
-        b.forEach(p => {
-
+      .then((response) => response.json())
+      .then((posts) => {
+        console.log(posts);
+        posts.forEach(postData => {
+          var postLink = document.createElement("a");
           var post = document.createElement("div");
           var postHeader = document.createElement("div");
           var postContent = document.createElement("p");
@@ -40,26 +46,17 @@
           var like = document.createElement("span");
           var comment = document.createElement("span");
 
-          postContent.textContent += `${p.message}`;
+          postLink.href = `/pages/post.html?id=${postData.id}`;
+          postLink.classList.add("post-link");
 
-          p.categories.forEach(cat => {
+          postContent.textContent = `${postData.message}`;
+
+          postData.categories.forEach(cat => {
             postCategory.textContent += `${cat.name} `;
           });
 
-          like.textContent += `❤️ ${p.like_count}`;
-          comment.textContent += `💬 Comments`;
-
-          // <div class="post">
-          //   <div class="post-header">
-          //     <span class="category">Sports</span>
-          //     Title
-          //   </div>
-          //   <p>Post content goes here...</p>
-          //   <div class="post-actions">
-          //     <span class="like">❤️ 50</span>
-          //     <span class="comment">💬 Comments</span>
-          //   </div>
-          // </div> 
+          like.textContent = `❤️ ${postData.like_count}`;
+          comment.textContent = `💬 Comments`;
 
           post.classList.add("post");
           postHeader.classList.add("post-header");
@@ -68,22 +65,23 @@
           like.classList.add("like");
           comment.classList.add("comment");
 
-          post.appendChild(postHeader);
-          post.appendChild(postContent);
-          post.appendChild(postActions);
-
           postHeader.appendChild(postCategory);
-          postHeader.append(`${p.title}`);
+          postHeader.append(` ${postData.title}`);
 
           postActions.appendChild(like);
           postActions.appendChild(comment);
 
-          document.getElementById("posts").appendChild(post);
+          post.appendChild(postHeader);
+          post.appendChild(postContent);
+          post.appendChild(postActions);
+
+          postLink.appendChild(post);
+          document.getElementById("posts").appendChild(postLink);
         });
       })
-      .catch((e) => {
-        console.log(e)
-        document.getElementById("posts").append("error getting posts, please refresh!")
-      })
-  } 
+      .catch((error) => {
+        console.log(error);
+        document.getElementById("posts").append("Error getting posts, please refresh!");
+      });
+  }
 </script>
