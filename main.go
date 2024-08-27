@@ -19,9 +19,11 @@ func main() {
 	http.HandleFunc("/logout", server.LogoutUser)
 	// get posts
 	http.HandleFunc("/get-posts", server.GetPosts)
+	http.HandleFunc("/get-post", server.GetPost)
 	http.HandleFunc("/create-post", server.CreatePost)
+	http.HandleFunc("/add-comment", server.CreateComment)
 	http.HandleFunc("/get-categories", server.GetCategories)
-    http.HandleFunc("/categories", server.GetCategories) 
+	http.HandleFunc("/categories", server.GetCategories) 
 
 	// Redirect root to main page
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
