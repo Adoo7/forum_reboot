@@ -77,11 +77,12 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	// Set the TimeofPost to the current time
 	newPost.TimeofPost = time.Now().Format("2006-01-02 15:04:05")
-
+	println("userID", newPost.UserID)
 	// Insert the new post into the Post table
 	res, err := DB.Exec("INSERT INTO Post (User_ID, Title, Messages, TimeofPost, Like_count, DisLike_Count) VALUES (?, ?, ?, ?, ?, ?)",
 		newPost.UserID, newPost.Title, newPost.Message, newPost.TimeofPost, newPost.LikeCount, newPost.DislikeCount)
 	if err != nil {
+		println(err.Error())
 		http.Error(w, "ERR:201 Failed to create post", http.StatusInternalServerError)
 		return
 	}
