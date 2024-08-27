@@ -46,12 +46,12 @@
         const title = document.getElementById('title').value;
         const message = document.getElementById('message').value;
         const selectedCategories = Array.from(document.getElementById('categories').selectedOptions).map(option => ({
-          CategoryID: option.value,
-          Name: option.text
+          category_id: Number(option.value),
+          name: option.text
         }));
 
         const postData = {
-          UserID: 1,  // Replace with actual user ID, if available
+          user_id: 1,  // Replace with actual user ID, if available
           Title: title,
           Message: message,
           LikeCount: 0,
