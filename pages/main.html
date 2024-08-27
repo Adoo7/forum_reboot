@@ -4,18 +4,19 @@
   <style>
     /* Styling for category buttons */
     .category-buttons button {
-      background-color: #333; 
-      color: white; 
-      border: none; 
-      padding: 10px 20px; 
-      margin: 5px; 
-      font-size: 16px; 
-      cursor: pointer; 
-      transition: background-color 0.3s; 
+      background-color: #333;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s;
     }
 
     .category-buttons button:hover {
-      background-color: darkblue; /* Darker blue on hover */
+      background-color: darkblue;
+      /* Darker blue on hover */
     }
   </style>
 </head>
@@ -49,7 +50,11 @@
       if (response.ok) {
         const categories = await response.json();
         const categoryButtons = document.getElementById('categoryButtons');
-
+        const button = document.createElement('button');
+        button.textContent = "All";
+        button.dataset.categoryId = -1; // Ensure this matches the IDs in your data
+        button.onclick = handleCategoryClick;
+        categoryButtons.appendChild(button);
         categories.forEach(category => {
           const button = document.createElement('button');
           button.textContent = category.name;
@@ -135,7 +140,7 @@
     const categoryId = parseInt(event.target.dataset.categoryId, 10); // Ensure it's an integer
     console.log(`Category clicked: ${categoryId}`);
 
-    if (categoryId === 'all') {
+    if (categoryId === -1) {
       displayPosts(allPosts);
     } else {
       const filteredPosts = allPosts.filter(post =>
@@ -146,7 +151,7 @@
     }
   }
 
-  window.onload = function() {
+  window.onload = function () {
     loadCategories();
     loadAllPosts(); // Load all posts initially
   };
