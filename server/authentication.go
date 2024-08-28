@@ -128,6 +128,17 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 
 
 
+func IsLoggedIn(w http.ResponseWriter, r *http.Request) {
+	_, loggedIn := CheckSession(r)
+	if loggedIn {
+		w.Write([]byte("true"))
+	} else {
+		w.Write([]byte("false"))
+	}
+}
+
+
+
 func CheckSession(r *http.Request) (int, bool) {
 	cookie, err := r.Cookie("session_id")
 	if err != nil {

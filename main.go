@@ -17,6 +17,7 @@ func main() {
 	http.HandleFunc("/register", server.RegisterUser)
 	http.HandleFunc("/login", server.LoginUser)
 	http.HandleFunc("/logout", server.LogoutUser)
+	http.HandleFunc("/is-logged-in", server.IsLoggedIn)
 	// get posts
 	http.HandleFunc("/get-posts", server.GetPosts)
 	http.HandleFunc("/get-post", server.GetPost)
