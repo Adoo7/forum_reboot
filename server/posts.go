@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"time"
 	"strconv"
+
 	"forum_reboot/structs"
 	"net/http"
 
@@ -69,59 +70,53 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-
 func CreatePost(w http.ResponseWriter, r *http.Request) {
-	var newPost structs.PostAPIResponse
+    userID, valid := CheckSession(r)
+    if !valid {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
 
-	// Decode the request body into the newPost struct
-	err := json.NewDecoder(r.Body).Decode(&newPost)
-	if err != nil {
-		println(err.Error())
-		http.Error(w, "ERR:200 Invalid input", http.StatusBadRequest)
-		return
-	}
+    var newPost structs.PostAPIResponse
+    err := json.NewDecoder(r.Body).Decode(&newPost)
+    if err != nil {
+        http.Error(w, "ERR:200 Invalid input", http.StatusBadRequest)
+        return
+    }
 
-	// Set the TimeofPost to the current time
-	newPost.TimeofPost = time.Now().Format("2006-01-02 15:04:05")
-	println("userID", newPost.UserID)
-	// Insert the new post into the Post table
-	res, err := DB.Exec("INSERT INTO Post (User_ID, Title, Messages, TimeofPost, Like_count, DisLike_Count) VALUES (?, ?, ?, ?, ?, ?)",
-		newPost.UserID, newPost.Title, newPost.Message, newPost.TimeofPost, newPost.LikeCount, newPost.DislikeCount)
-	if err != nil {
-		println(err.Error())
-		println(err.Error())
-		http.Error(w, "ERR:201 Failed to create post", http.StatusInternalServerError)
-		return
-	}
+    newPost.TimeofPost = time.Now().Format("2006-01-02 15:04:05")
+    newPost.UserID = userID
+    println("Creating post with UserID:", newPost.UserID) // Debug log
 
-	// Get the last inserted PostID
-	postID, err := res.LastInsertId()
-	if err != nil {
-		println(err.Error())
-		http.Error(w, "ERR:202 Failed to retrieve post ID", http.StatusInternalServerError)
-		return
-	}
+    res, err := DB.Exec("INSERT INTO Post (User_ID, Title, Messages, TimeofPost, Like_count, DisLike_Count) VALUES (?, ?, ?, ?, ?, ?)",
+        newPost.UserID, newPost.Title, newPost.Message, newPost.TimeofPost, newPost.LikeCount, newPost.DislikeCount)
+    if err != nil {
+        http.Error(w, "ERR:201 Failed to create post", http.StatusInternalServerError)
+        return
+    }
 
-	// Add categories if provided
-	if newPost.Categories != nil {
-		for _, category := range *newPost.Categories {
-			_, err := DB.Exec("INSERT INTO PostCategory (PostID, Category_ID) VALUES (?, ?)", postID, category.CategoryID)
-			if err != nil {
-				println(err.Error())
-				http.Error(w, "ERR:203 Failed to associate categories with post", http.StatusInternalServerError)
-				return
-			}
-		}
-	}
+    postID, err := res.LastInsertId()
+    if err != nil {
+        http.Error(w, "ERR:202 Failed to retrieve post ID", http.StatusInternalServerError)
+        return
+    }
 
-	// Respond with the created post ID
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"post_id": postID,
-	})
+    if newPost.Categories != nil {
+        for _, category := range *newPost.Categories {
+            _, err := DB.Exec("INSERT INTO PostCategory (PostID, Category_ID) VALUES (?, ?)", postID, category.CategoryID)
+            if err != nil {
+                http.Error(w, "ERR:203 Failed to associate categories with post", http.StatusInternalServerError)
+                return
+            }
+        }
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusCreated)
+    json.NewEncoder(w).Encode(map[string]interface{}{
+        "post_id": postID,
+    })
 }
-
 
 func GetPost(w http.ResponseWriter, r *http.Request) {
 	// Get the post ID from the query parameters
