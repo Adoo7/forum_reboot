@@ -172,41 +172,61 @@
     }
 
     async function submitComment() {
-      const commentInput = document.getElementById("commentInput");
-      const comment = commentInput.value.trim();
+  // Check if the user is logged in
+  const isLoggedIn = await checkLoginStatus();
+  
+  if (!isLoggedIn) {
+    alert('You must be logged in to submit a comment. Redirecting to login page...');
+    window.location.href = '/pages/login.html'; // Redirect to the login page
+    return;
+  }
 
-      if (comment === '') {
-        alert('Please enter a comment before submitting.');
-        return;
-      }
+  const commentInput = document.getElementById("commentInput");
+  const comment = commentInput.value.trim();
 
-      try {
-        const response = await fetch('/add-comment', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            post_id: postId,
-            message: comment,
-            user_id: 1, // Replace with actual user data
-          }),
-        });
+  if (comment === '') {
+    alert('Please enter a comment before submitting.');
+    return;
+  }
 
-        if (response.ok) {
-          commentInput.value = ''; // Clear the input field
-          location.reload() // Reload page to show the new comment
-        } else {
-          console.error('Failed to submit comment');
-          alert('Failed to submit comment. Please try again.');
-        }
-      } catch (error) {
-        console.error('Error submitting comment:', error);
-        alert('Failed to submit comment. Please try again later.');
-      }
+  try {
+    const response = await fetch('/add-comment', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        post_id: postId,
+        message: comment,
+        user_id: 1, // Replace with actual user data
+      }),
+    });
+
+    if (response.ok) {
+      commentInput.value = ''; // Clear the input field
+      location.reload() // Reload page to show the new comment
+    } else {
+      console.error('Failed to submit comment');
+      alert('Failed to submit comment. Please try again.');
     }
+  } catch (error) {
+    console.error('Error submitting comment:', error);
+    alert('Failed to submit comment. Please try again later.');
+  }
+}
 
-    window.onload = loadPostDetails;
+async function checkLoginStatus() {
+  try {
+    const response = await fetch('/is-logged-in');
+    const status = await response.text();
+    return status === 'true';
+  } catch (error) {
+    console.error('Error checking login status:', error);
+    return false;
+  }
+}
+
+window.onload = loadPostDetails;
   </script>
 </body>
 

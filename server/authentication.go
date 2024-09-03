@@ -1,18 +1,13 @@
 package server
 
 import (
-
 	"database/sql"
-
-
-
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
-
 )
 
 var DB *sql.DB
@@ -24,6 +19,7 @@ func init() {
 		panic(err)
 	}
 }
+
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	log.Println("RegisterUser called")
 	if r.Method == http.MethodPost {
@@ -64,25 +60,17 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
-
 func LoginUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		// Parse the form data
 		err := r.ParseForm()
 		if err != nil {
 			http.Error(w, "Invalid request", http.StatusBadRequest)
 			return
 		}
 
-		// Retrieve form values
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 
-		// Log the input email and password for debugging
-		log.Printf("Email: %s, Password: %s", email, password)
-
-		// Retrieve stored password from the database
 		var storedPassword string
 		err = DB.QueryRow("SELECT passwords FROM User WHERE email = ?", email).Scan(&storedPassword)
 		if err != nil {
@@ -94,39 +82,33 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Log the stored password for debugging
-		log.Printf("Stored Password: %s", storedPassword)
-
-		// Check if the provided password matches the stored password
 		if password != storedPassword {
 			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 			return
 		}
 
-		// Create session
 		sessionID := uuid.New().String()
-		expireTime := time.Now().Add(1 * time.Hour) // Session expires in 1 hour
+		expireTime := time.Now().Add(1 * time.Hour).Format(time.RFC3339)
 		_, err = DB.Exec("INSERT INTO UserSession (UserSessionID, User_ID, Token, ExpireTime) SELECT ?, User_ID, ?, ? FROM User WHERE email = ?", sessionID, sessionID, expireTime, email)
 		if err != nil {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
 
-		// Set cookie
 		http.SetCookie(w, &http.Cookie{
-			Name:    "session_id",
-			Value:   sessionID,
-			Expires: expireTime,
-			Path:    "/",
+			Name:     "session_id",
+			Value:    sessionID,
+			Expires:  time.Now().Add(1 * time.Hour),
+			Path:     "/",
+			HttpOnly: true,
 		})
 
-		w.WriteHeader(http.StatusOK)
+		// Redirect to the main page after successful login
+		http.Redirect(w, r, "/pages/main.html", http.StatusSeeOther)
 	} else {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 	}
 }
-
-
 
 func CheckSession(r *http.Request) (int, bool) {
 	cookie, err := r.Cookie("session_id")
@@ -146,29 +128,64 @@ func CheckSession(r *http.Request) (int, bool) {
 	return userID, true
 }
 
+func IsLoggedIn(w http.ResponseWriter, r *http.Request) {
+	_, loggedIn := CheckSession(r)
+	if loggedIn {
+		w.Write([]byte("true"))
+	} else {
+		w.Write([]byte("false"))
+	}
+}
+
 func LogoutUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
 	cookie, err := r.Cookie("session_id")
 	if err != nil {
+		log.Printf("Error retrieving cookie: %v", err)
 		http.Error(w, "No active session", http.StatusUnauthorized)
 		return
 	}
 
-	// Delete session from the database
-	_, err = DB.Exec("DELETE FROM UserSession WHERE Token = ?", cookie.Value)
+	log.Printf("Received cookie: %v", cookie.Value)
+
+	var count int
+	err = DB.QueryRow("SELECT COUNT(*) FROM UserSession WHERE Token = ?", cookie.Value).Scan(&count)
 	if err != nil {
+		log.Printf("Error checking session count: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	// Expire the cookie
+	if count == 0 {
+		log.Printf("No session found for token: %v", cookie.Value)
+		http.Error(w, "Invalid session", http.StatusUnauthorized)
+		return
+	}
+
+	_, err = DB.Exec("DELETE FROM UserSession WHERE Token = ?", cookie.Value)
+	if err != nil {
+		log.Printf("Error deleting session: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// Clear the session cookie
 	http.SetCookie(w, &http.Cookie{
-		Name:    "session_id",
-		Value:   "",
-		Expires: time.Now().Add(-1 * time.Hour),
-		Path:    "/",
+		Name:     "session_id",
+		Value:    "",
+		Expires:  time.Now().Add(-1 * time.Hour),
+		Path:     "/",
+		HttpOnly: true,
 	})
 
-	w.WriteHeader(http.StatusOK)
+	log.Println("Successfully logged out")
+
+	// Redirect to the main page
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 // server/authentication.go

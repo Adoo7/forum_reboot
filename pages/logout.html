@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logout</title>
+    <link rel="stylesheet" type="text/css" href="/pages/style/styles.css">
+</head>
+
+<body>
+    <header>
+        <h1>Logout</h1>
+    </header>
+
+    <div class="container">
+        <h2>You are about to log out</h2>
+        <button id="confirm-logout">Confirm Logout</button>
+    </div>
+
+    <script>
+        document.getElementById('logout-btn').addEventListener('click', async function(event) {
+    event.preventDefault();
+
+    try {
+        const response = await fetch('/logout', {
+            method: 'POST',
+            credentials: 'same-origin' // Ensure cookies are sent
+        });
+
+        if (response.ok) {
+            window.location.href = '/pages/main.html'; // Redirect to the main page
+        } else {
+            alert('Logout failed. Please try again.');
+            console.error('Logout error:', response.statusText);
+        }
+    } catch (error) {
+        console.error('Error during logout:', error);
+        alert('An error occurred during logout. Please try again later.');
+    }
+});
+
+    </script>
+</body>
+
+</html>

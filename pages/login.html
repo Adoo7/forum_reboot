@@ -51,7 +51,7 @@
         }
 
         button:hover {
-            background-color: #636060;
+            background-color: #434343;
         }
     </style>
 </head>
@@ -60,7 +60,7 @@
     <header>
         <h1>Forum Login</h1>
     </header>
-    <form action="/login" method="post">
+    <form id="loginForm">
         <label for="email">Email:</label>
         <input type="email" id="email" name="email" required>
         <br>
@@ -69,6 +69,33 @@
         <br>
         <button type="submit">Login</button>
     </form>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (response.ok) {
+                    window.location.href = '/pages/main.html'; 
+                } else {
+                    console.error('Login failed');
+                    alert('Login failed. Please check your email and password.');
+                }
+            } catch (error) {
+                console.error('Error during login:', error);
+                alert('An error occurred during login. Please try again later.');
+            }
+        });
+    </script>
 </body>
 
 </html>
