@@ -68,21 +68,15 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 func LoginUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		// Parse the form data
 		err := r.ParseForm()
 		if err != nil {
 			http.Error(w, "Invalid request", http.StatusBadRequest)
 			return
 		}
 
-		// Retrieve form values
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 
-		// Log the input email and password for debugging
-		log.Printf("Email: %s, Password: %s", email, password)
-
-		// Retrieve stored password from the database
 		var storedPassword string
 		err = DB.QueryRow("SELECT passwords FROM User WHERE email = ?", email).Scan(&storedPassword)
 		if err != nil {
@@ -94,33 +88,28 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Log the stored password for debugging
-		log.Printf("Stored Password: %s", storedPassword)
-
-		// Check if the provided password matches the stored password
 		if password != storedPassword {
 			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 			return
 		}
 
-		// Create session
 		sessionID := uuid.New().String()
-		expireTime := time.Now().Add(1 * time.Hour) // Session expires in 1 hour
+		expireTime := time.Now().Add(1 * time.Hour).Format(time.RFC3339)
 		_, err = DB.Exec("INSERT INTO UserSession (UserSessionID, User_ID, Token, ExpireTime) SELECT ?, User_ID, ?, ? FROM User WHERE email = ?", sessionID, sessionID, expireTime, email)
 		if err != nil {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
 
-		// Set cookie
 		http.SetCookie(w, &http.Cookie{
 			Name:    "session_id",
 			Value:   sessionID,
-			Expires: expireTime,
+			Expires: time.Now().Add(1 * time.Hour),
 			Path:    "/",
+			HttpOnly: true,
 		})
 
-		w.WriteHeader(http.StatusOK)
+		http.Redirect(w, r, "/pages/main.html", http.StatusSeeOther)
 	} else {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 	}
@@ -147,28 +136,54 @@ func CheckSession(r *http.Request) (int, bool) {
 }
 
 func LogoutUser(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("session_id")
-	if err != nil {
-		http.Error(w, "No active session", http.StatusUnauthorized)
-		return
-	}
+    if r.Method != http.MethodPost {
+        http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+        return
+    }
 
-	// Delete session from the database
-	_, err = DB.Exec("DELETE FROM UserSession WHERE Token = ?", cookie.Value)
-	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
+    cookie, err := r.Cookie("session_id")
+    if err != nil {
+        log.Printf("Error retrieving cookie: %v", err)
+        http.Error(w, "No active session", http.StatusUnauthorized)
+        return
+    }
 
-	// Expire the cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:    "session_id",
-		Value:   "",
-		Expires: time.Now().Add(-1 * time.Hour),
-		Path:    "/",
-	})
+    log.Printf("Received cookie: %v", cookie.Value)
 
-	w.WriteHeader(http.StatusOK)
+    var count int
+    err = DB.QueryRow("SELECT COUNT(*) FROM UserSession WHERE Token = ?", cookie.Value).Scan(&count)
+    if err != nil {
+        log.Printf("Error checking session count: %v", err)
+        http.Error(w, "Internal server error", http.StatusInternalServerError)
+        return
+    }
+
+    if count == 0 {
+        log.Printf("No session found for token: %v", cookie.Value)
+        http.Error(w, "Invalid session", http.StatusUnauthorized)
+        return
+    }
+
+    _, err = DB.Exec("DELETE FROM UserSession WHERE Token = ?", cookie.Value)
+    if err != nil {
+        log.Printf("Error deleting session: %v", err)
+        http.Error(w, "Internal server error", http.StatusInternalServerError)
+        return
+    }
+
+    // Clear the session cookie
+    http.SetCookie(w, &http.Cookie{
+        Name:    "session_id",
+        Value:   "",
+        Expires: time.Now().Add(-1 * time.Hour),
+        Path:    "/",
+        HttpOnly: true,
+    })
+
+    log.Println("Successfully logged out")
+
+    // Redirect to the main page
+    http.Redirect(w, r, "/", http.StatusFound)
 }
 
 // server/authentication.go

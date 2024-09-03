@@ -1,158 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
 <head>
-  <title>Forum</title>
-  <link rel="stylesheet" type="text/css" href="/pages/style/styles.css">
-  <style>
-    /* Styling for category buttons */
-    .category-buttons button {
-      background-color: #333;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      margin: 5px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
-    .category-buttons button:hover {
-      background-color: darkblue;
-      /* Darker blue on hover */
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forum</title>
+    <link rel="stylesheet" type="text/css" href="/pages/style/styles.css">
+    
 </head>
-
-
 <body>
-  <header>
-    <h1>Forum</h1>
-    <nav>
-      <a href="/pages/login.html" class="login-btn">Login</a>
-      <a href="/pages/add-post.html" class="add-post-btn">➕</a>
-    </nav>
-  </header>
+    <header>
+        <h1>Forum</h1>
+        <nav>
+            <a href="/pages/login.html" id="login-btn" class="login-btn">Login</a>
+            <a href="/pages/register.html" id="register-btn" class="register">Register</a>
+            <a href="/pages/logout.html" id="logout-btn" class="logout">Logout</a>
+            <a href="/pages/add-post.html" class="add-post-btn">Add Post➕</a>
+        </nav>
+    </header>
 
-  <div class="container">
-    <div id="categoryButtons" class="category-buttons">
-      <!-- Categories will be dynamically populated here -->
+    <div class="container">
+        <div id="categoryButtons" class="category-buttons">
+            <!-- Categories will be dynamically populated here -->
+        </div>
+        <div id="posts">
+            <!-- Posts will be dynamically generated here -->
+        </div>
     </div>
-    <div id="posts">
-      <!-- Posts will be dynamically generated here -->
-    </div>
-  </div>
+
+    <script>
+        let allPosts = []; // Store all posts here
+
+        async function loadCategories() {
+            try {
+                const response = await fetch('/categories');
+                if (response.ok) {
+                    const categories = await response.json();
+                    const categoryButtons = document.getElementById('categoryButtons');
+                    const button = document.createElement('button');
+                    button.textContent = "All";
+                    button.dataset.categoryId = -1; // Ensure this matches the IDs in your data
+                    button.onclick = handleCategoryClick;
+                    categoryButtons.appendChild(button);
+                    categories.forEach(category => {
+                        const button = document.createElement('button');
+                        button.textContent = category.name;
+                        button.dataset.categoryId = category.category_id; // Ensure this matches the IDs in your data
+                        button.onclick = handleCategoryClick;
+                        categoryButtons.appendChild(button);
+                    });
+                } else {
+                    console.error('Failed to load categories');
+                    alert('Failed to load categories. Please refresh the page.');
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+                alert('Failed to load categories. Please try again later.');
+            }
+        }
+
+        async function loadAllPosts() {
+            try {
+                const response = await fetch('/get-posts');
+                if (response.ok) {
+                    allPosts = await response.json();
+                    displayPosts(allPosts);
+                } else {
+                    console.error('Failed to load posts');
+                    alert('Failed to load posts. Please refresh the page.');
+                }
+            } catch (error) {
+                console.error('Error loading posts:', error);
+                alert('Failed to load posts. Please try again later.');
+            }
+        }
+
+        function displayPosts(posts) {
+            const postsContainer = document.getElementById("posts");
+            postsContainer.innerHTML = ''; // Clear existing posts
+
+            posts.forEach(postData => {
+                const postLink = document.createElement("a");
+                const post = document.createElement("div");
+                const postHeader = document.createElement("div");
+                const postContent = document.createElement("p");
+                const postActions = document.createElement("div");
+                const postCategory = document.createElement("span");
+                const like = document.createElement("span");
+                const comment = document.createElement("span");
+
+                postLink.href = `/pages/post.html?id=${postData.post_id}`;
+                postLink.classList.add("post-link");
+
+                postContent.textContent = `${postData.message}`;
+
+                postData.categories.forEach(cat => {
+                    postCategory.textContent += `${cat.name} `;
+                });
+
+                like.textContent = `❤️ ${postData.like_count}`;
+                comment.textContent = `💬 Comments`;
+
+                post.classList.add("post");
+                postHeader.classList.add("post-header");
+                postActions.classList.add("post-actions");
+                postCategory.classList.add("category");
+                like.classList.add("like");
+                comment.classList.add("comment");
+
+                postHeader.appendChild(postCategory);
+                postHeader.append(` ${postData.title}`);
+
+                postActions.appendChild(like);
+                postActions.appendChild(comment);
+
+                post.appendChild(postHeader);
+                post.appendChild(postContent);
+                post.appendChild(postActions);
+
+                postLink.appendChild(post);
+                postsContainer.appendChild(postLink);
+            });
+        }
+
+        function handleCategoryClick(event) {
+            const categoryId = parseInt(event.target.dataset.categoryId, 10); // Ensure it's an integer
+            console.log(`Category clicked: ${categoryId}`);
+
+            if (categoryId === -1) {
+                displayPosts(allPosts);
+            } else {
+                const filteredPosts = allPosts.filter(post =>
+                    post.categories.some(cat => cat.category_id === categoryId)
+                );
+                console.log('Filtered posts:', filteredPosts); // Debugging line
+                displayPosts(filteredPosts);
+            }
+        }
+
+        // Check session status on page load
+        window.onload = function () {
+            fetch('/check-session', {
+                method: 'GET',
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('login-btn').style.display = 'none';
+                    document.getElementById('register-btn').style.display = 'none';
+                    document.getElementById('logout-btn').style.display = 'inline-block';
+                } else {
+                    document.getElementById('login-btn').style.display = 'inline-block';
+                    document.getElementById('register-btn').style.display = 'inline-block';
+                    document.getElementById('logout-btn').style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+
+            loadCategories();
+            loadAllPosts(); // Load all posts initially
+        };
+    </script>
 </body>
 
-<script>
-  let allPosts = []; // Store all posts here
-
-  async function loadCategories() {
-    try {
-      const response = await fetch('/categories');
-      if (response.ok) {
-        const categories = await response.json();
-        const categoryButtons = document.getElementById('categoryButtons');
-        const button = document.createElement('button');
-        button.textContent = "All";
-        button.dataset.categoryId = -1; // Ensure this matches the IDs in your data
-        button.onclick = handleCategoryClick;
-        categoryButtons.appendChild(button);
-        categories.forEach(category => {
-          const button = document.createElement('button');
-          button.textContent = category.name;
-          button.dataset.categoryId = category.category_id; // Ensure this matches the IDs in your data
-          button.onclick = handleCategoryClick;
-          categoryButtons.appendChild(button);
-        });
-      } else {
-        console.error('Failed to load categories');
-        alert('Failed to load categories. Please refresh the page.');
-      }
-    } catch (error) {
-      console.error('Error loading categories:', error);
-      alert('Failed to load categories. Please try again later.');
-    }
-  }
-
-  async function loadAllPosts() {
-    try {
-      const response = await fetch('/get-posts');
-      if (response.ok) {
-        allPosts = await response.json();
-        displayPosts(allPosts);
-      } else {
-        console.error('Failed to load posts');
-        alert('Failed to load posts. Please refresh the page.');
-      }
-    } catch (error) {
-      console.error('Error loading posts:', error);
-      alert('Failed to load posts. Please try again later.');
-    }
-  }
-
-  function displayPosts(posts) {
-    const postsContainer = document.getElementById("posts");
-    postsContainer.innerHTML = ''; // Clear existing posts
-
-    posts.forEach(postData => {
-      const postLink = document.createElement("a");
-      const post = document.createElement("div");
-      const postHeader = document.createElement("div");
-      const postContent = document.createElement("p");
-      const postActions = document.createElement("div");
-      const postCategory = document.createElement("span");
-      const like = document.createElement("span");
-      const comment = document.createElement("span");
-
-      postLink.href = `/pages/post.html?id=${postData.post_id}`;
-      postLink.classList.add("post-link");
-
-      postContent.textContent = `${postData.message}`;
-
-      postData.categories.forEach(cat => {
-        postCategory.textContent += `${cat.name} `;
-      });
-
-      like.textContent = `❤️ ${postData.like_count}`;
-      comment.textContent = `💬 Comments`;
-
-      post.classList.add("post");
-      postHeader.classList.add("post-header");
-      postActions.classList.add("post-actions");
-      postCategory.classList.add("category");
-      like.classList.add("like");
-      comment.classList.add("comment");
-
-      postHeader.appendChild(postCategory);
-      postHeader.append(` ${postData.title}`);
-
-      postActions.appendChild(like);
-      postActions.appendChild(comment);
-
-      post.appendChild(postHeader);
-      post.appendChild(postContent);
-      post.appendChild(postActions);
-
-      postLink.appendChild(post);
-      postsContainer.appendChild(postLink);
-    });
-  }
-
-  function handleCategoryClick(event) {
-    const categoryId = parseInt(event.target.dataset.categoryId, 10); // Ensure it's an integer
-    console.log(`Category clicked: ${categoryId}`);
-
-    if (categoryId === -1) {
-      displayPosts(allPosts);
-    } else {
-      const filteredPosts = allPosts.filter(post =>
-        post.categories.some(cat => cat.category_id === categoryId)
-      );
-      console.log('Filtered posts:', filteredPosts); // Debugging line
-      displayPosts(filteredPosts);
-    }
-  }
-
-  window.onload = function () {
-    loadCategories();
-    loadAllPosts(); // Load all posts initially
-  };
-</script>
+</html>
