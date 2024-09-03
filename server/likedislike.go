@@ -3,7 +3,8 @@ package server
 import (
     "encoding/json"
     "net/http"
-    "fmt"
+    //"fmt"
+    "log"
 )
 
 func updatePostLikeHandler(w http.ResponseWriter, r *http.Request) {
@@ -44,3 +45,7 @@ func updateLikeDislikeInDB(postID int, action string) bool {
 }
 
 
+//func main() {
+   // http.HandleFunc("/update-post-like", updatePostLikeHandler)
+   // http.ListenAndServe(":2345", nil)
+//}

@@ -19,27 +19,28 @@
     </div>
 
     <script>
-        document.getElementById('logout-btn').addEventListener('click', async function(event) {
-    event.preventDefault();
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('confirm-logout').addEventListener('click', async function(event) {
+                event.preventDefault();
 
-    try {
-        const response = await fetch('/logout', {
-            method: 'POST',
-            credentials: 'same-origin' // Ensure cookies are sent
+                try {
+                    const response = await fetch('/logout', {
+                        method: 'POST',
+                        credentials: 'same-origin' // Ensure cookies are sent
+                    });
+
+                    if (response.ok) {
+                        window.location.href = '/pages/main.html'; // Redirect to the main page
+                    } else {
+                        alert('Logout failed. Please try again.');
+                        console.error('Logout error:', response.statusText);
+                    }
+                } catch (error) {
+                    console.error('Error during logout:', error);
+                    alert('An error occurred during logout. Please try again later.');
+                }
+            });
         });
-
-        if (response.ok) {
-            window.location.href = '/pages/main.html'; // Redirect to the main page
-        } else {
-            alert('Logout failed. Please try again.');
-            console.error('Logout error:', response.statusText);
-        }
-    } catch (error) {
-        console.error('Error during logout:', error);
-        alert('An error occurred during logout. Please try again later.');
-    }
-});
-
     </script>
 </body>
 
