@@ -5,6 +5,7 @@ import (
 	"forum_reboot/server"
 	"log"
 	"net/http"
+	"encoding/json"
 )
 
 func main() {
@@ -25,6 +26,15 @@ func main() {
 	http.HandleFunc("/add-comment", server.CreateComment)
 	http.HandleFunc("/get-categories", server.GetCategories)
 	http.HandleFunc("/categories", server.GetCategories) 
+
+	// Handle like/dislike updates
+	http.HandleFunc("/update-post-like", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+	})
+	
+
 
 	// Redirect root to main page
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
