@@ -3,9 +3,6 @@ package server
 import (
 
 	"database/sql"
-
-
-
 	"log"
 	"net/http"
 	"time"
@@ -24,6 +21,9 @@ func init() {
 		panic(err)
 	}
 }
+
+
+
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	log.Println("RegisterUser called")
 	if r.Method == http.MethodPost {
@@ -63,7 +63,6 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 	}
 }
-
 
 
 func LoginUser(w http.ResponseWriter, r *http.Request) {
@@ -120,12 +119,12 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 			Path:    "/",
 		})
 
-		w.WriteHeader(http.StatusOK)
+		// Redirect to the main page after successful login
+		http.Redirect(w, r, "/pages/main.html", http.StatusSeeOther)
 	} else {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 	}
 }
-
 
 
 func CheckSession(r *http.Request) (int, bool) {
@@ -145,6 +144,19 @@ func CheckSession(r *http.Request) (int, bool) {
 
 	return userID, true
 }
+
+
+
+func IsLoggedIn(w http.ResponseWriter, r *http.Request) {
+	_, loggedIn := CheckSession(r)
+	if loggedIn {
+		w.Write([]byte("true"))
+	} else {
+		w.Write([]byte("false"))
+	}
+}
+
+
 
 func LogoutUser(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session_id")

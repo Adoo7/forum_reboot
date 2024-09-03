@@ -31,6 +31,7 @@
     </nav>
   </header>
 
+
   <div class="container">
     <div id="categoryButtons" class="category-buttons">
       <!-- Categories will be dynamically populated here -->
@@ -155,4 +156,27 @@
     loadCategories();
     loadAllPosts(); // Load all posts initially
   };
+
+
+  window.onload = async function () {
+    const isLoggedIn = await checkLoginStatus();
+    if (!isLoggedIn) {
+        document.querySelector('.add-post-btn').style.display = 'none';
+    }
+
+    loadCategories();
+    loadAllPosts(); // Load all posts initially
+};
+
+async function checkLoginStatus() {
+    try {
+        const response = await fetch('/is-logged-in');
+        const status = await response.text();
+        return status === 'true';
+    } catch (error) {
+        console.error('Error checking login status:', error);
+        return false;
+    }
+}
+
 </script>
