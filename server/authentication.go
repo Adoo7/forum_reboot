@@ -53,8 +53,8 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
-
-		w.WriteHeader(http.StatusCreated)
+		// w.WriteHeader(http.StatusCreated)
+		http.Redirect(w, r, "/pages/main.html", http.StatusSeeOther)
 	} else {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 	}
