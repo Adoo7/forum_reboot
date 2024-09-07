@@ -54,7 +54,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// w.WriteHeader(http.StatusCreated)
-		http.Redirect(w, r, "/pages/main.html", http.StatusSeeOther)
+		http.Redirect(w, r, "/pages/login.html", http.StatusSeeOther)
 	} else {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 	}
